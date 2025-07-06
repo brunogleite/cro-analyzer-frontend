@@ -1,6 +1,23 @@
 import { useState, useCallback, useEffect } from "react"
 import { Report } from "../types"
 
+// Type guard to validate report data from localStorage
+const isValidReport = (data: unknown): data is Omit<Report, 'startTime' | 'completedTime'> & {
+  startTime: string
+  completedTime?: string
+} => {
+  if (typeof data !== 'object' || data === null) return false
+  const obj = data as Record<string, unknown>
+  
+  return (
+    typeof obj.id === 'string' &&
+    typeof obj.url === 'string' &&
+    typeof obj.status === 'string' &&
+    typeof obj.progress === 'number' &&
+    typeof obj.startTime === 'string'
+  )
+}
+
 export const useReports = () => {
   const [reports, setReports] = useState<Report[]>(() => {
     // Load from localStorage on init
@@ -9,11 +26,15 @@ export const useReports = () => {
       if (saved) {
         try {
           const parsed = JSON.parse(saved)
-          return parsed.map((report: any) => ({
-            ...report,
-            startTime: new Date(report.startTime),
-            completedTime: report.completedTime ? new Date(report.completedTime) : undefined,
-          }))
+          if (Array.isArray(parsed)) {
+            return parsed
+              .filter(isValidReport)
+              .map((report) => ({
+                ...report,
+                startTime: new Date(report.startTime),
+                completedTime: report.completedTime ? new Date(report.completedTime) : undefined,
+              }))
+          }
         } catch {
           return []
         }

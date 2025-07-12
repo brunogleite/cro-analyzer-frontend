@@ -6,7 +6,6 @@ import {
   Sidebar,
   Header,
   OneTimeAnalysis,
-  ReportsDashboard,
   useReports,
   isValidUrl,
   TabType,
@@ -14,7 +13,7 @@ import {
   useAuthContext
 } from "@/components"
 
-export default function CROAnalyzer() {
+export default function OneTimePage() {
   const { isAuthenticated, isLoading } = useAuthContext()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabType>("one-time")
@@ -92,16 +91,6 @@ export default function CROAnalyzer() {
     }
   }, [handleGenerateReport, isSubmitting])
 
-  const handleViewReport = useCallback((reportId: string) => {
-    // Redirect to protected reports page
-    router.push('/reports')
-  }, [router])
-
-  const handleDownloadPDF = useCallback((reportId: string) => {
-    // TODO: Implement PDF download logic
-    console.log("Downloading PDF for report:", reportId)
-  }, [])
-
   // Show loading state while checking authentication
   if (isLoading) {
     return (
@@ -124,32 +113,16 @@ export default function CROAnalyzer() {
         <Header activeTab={activeTab} />
 
         <div className="flex-1 p-6 overflow-auto">
-          {activeTab === "one-time" && (
-            <OneTimeAnalysis
-              url={url}
-              error={error}
-              isSubmitting={isSubmitting}
-              onUrlChange={handleUrlChange}
-              onKeyPress={handleKeyPress}
-              onSubmit={handleGenerateReport}
-            />
-          )}
-
-          {activeTab === "reports" && (
-            <ReportsDashboard
-              reports={reports}
-              url={url}
-              error={error}
-              isSubmitting={isSubmitting}
-              onUrlChange={handleUrlChange}
-              onKeyPress={handleKeyPress}
-              onSubmit={handleGenerateReport}
-              onViewReport={handleViewReport}
-              onDownloadPDF={handleDownloadPDF}
-            />
-          )}
+          <OneTimeAnalysis
+            url={url}
+            error={error}
+            isSubmitting={isSubmitting}
+            onUrlChange={handleUrlChange}
+            onKeyPress={handleKeyPress}
+            onSubmit={handleGenerateReport}
+          />
         </div>
       </div>
     </div>
   )
-}
+} 

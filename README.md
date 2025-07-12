@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CRO Analyzer Frontend
 
-## Getting Started
+A Next.js application for website conversion optimization analysis.
 
-First, run the development server:
+## Features
 
+- **Authentication System**: JWT-based authentication with login/register functionality
+- **Protected Routes**: Reports page requires authentication
+- **One-Time Analysis**: Quick website analysis without authentication
+- **Reports Dashboard**: View and manage analysis reports (protected)
+- **Modern UI**: Built with Tailwind CSS and shadcn/ui components
+
+## Setup
+
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Create a `.env.local` file in the root directory:
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Make sure the backend server is running on port 3001
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Start the development server:
+```bash
+npm run dev
+```
 
-## Learn More
+## Authentication Flow
 
-To learn more about Next.js, take a look at the following resources:
+- **Unauthenticated users**: Can access the main page (`/`) and use one-time analysis
+- **Authenticated users**: Can access all features including the protected reports page (`/reports`)
+- **Reports page**: Automatically redirects unauthenticated users to the main page
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Routes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `/` - Main page with authentication and one-time analysis
+- `/reports` - Protected reports dashboard (requires authentication)
 
-## Deploy on Vercel
+## Components
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `AuthPage` - Login/Register forms
+- `ProtectedRoute` - Authentication middleware component
+- `AuthProvider` - Context provider for authentication state
+- `useAuth` - Hook for authentication functionality
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Backend Integration
+
+The frontend integrates with the Fastify backend API:
+- Authentication endpoints: `/api/auth/login`, `/api/auth/register`
+- CRO analysis endpoints: `/api/cro/*`
+- JWT token-based authentication

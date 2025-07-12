@@ -1,23 +1,18 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import {
   Sidebar,
   Header,
-  OneTimeAnalysis,
   ReportsDashboard,
   useReports,
   isValidUrl,
   TabType,
-  AuthPage,
-  useAuthContext
+  ProtectedRoute
 } from "@/components"
 
-export default function CROAnalyzer() {
-  const { isAuthenticated, isLoading } = useAuthContext()
-  const router = useRouter()
-  const [activeTab, setActiveTab] = useState<TabType>("one-time")
+export default function ReportsPage() {
+  const [activeTab, setActiveTab] = useState<TabType>("reports")
   const [url, setUrl] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -93,49 +88,24 @@ export default function CROAnalyzer() {
   }, [handleGenerateReport, isSubmitting])
 
   const handleViewReport = useCallback((reportId: string) => {
-    // Redirect to protected reports page
-    router.push('/reports')
-  }, [router])
+    // TODO: Implement report viewing logic
+    console.log("Viewing report:", reportId)
+  }, [])
 
   const handleDownloadPDF = useCallback((reportId: string) => {
     // TODO: Implement PDF download logic
     console.log("Downloading PDF for report:", reportId)
   }, [])
 
-  // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    )
-  }
-
-  // Show authentication page if not authenticated
-  if (!isAuthenticated) {
-    return <AuthPage />
-  }
-
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+    <ProtectedRoute>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <div className="flex-1 flex flex-col">
-        <Header activeTab={activeTab} />
+        <div className="flex-1 flex flex-col">
+          <Header activeTab={activeTab} />
 
-        <div className="flex-1 p-6 overflow-auto">
-          {activeTab === "one-time" && (
-            <OneTimeAnalysis
-              url={url}
-              error={error}
-              isSubmitting={isSubmitting}
-              onUrlChange={handleUrlChange}
-              onKeyPress={handleKeyPress}
-              onSubmit={handleGenerateReport}
-            />
-          )}
-
-          {activeTab === "reports" && (
+          <div className="flex-1 p-6 overflow-auto">
             <ReportsDashboard
               reports={reports}
               url={url}
@@ -147,9 +117,9 @@ export default function CROAnalyzer() {
               onViewReport={handleViewReport}
               onDownloadPDF={handleDownloadPDF}
             />
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
-}
+} 

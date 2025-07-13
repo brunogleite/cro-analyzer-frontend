@@ -1,63 +1,168 @@
 "use client"
 import { useState, useCallback, useEffect } from "react"
-import { Report } from "../types"
+import { Report, ApiResponse } from "../types"
+import { useAuthContext } from "../contexts/AuthContext"
 
-// Type guard to validate report data from localStorage
-const isValidReport = (data: unknown): data is Omit<Report, 'startTime' | 'completedTime'> & {
-  startTime: string
-  completedTime?: string
-} => {
-  if (typeof data !== 'object' || data === null) return false
-  const obj = data as Record<string, unknown>
-  
-  return (
-    typeof obj.id === 'string' &&
-    typeof obj.url === 'string' &&
-    typeof obj.status === 'string' &&
-    typeof obj.progress === 'number' &&
-    typeof obj.startTime === 'string'
-  )
-}
+const API_BASE_URL = 'http://localhost:3000'
 
 export const useReports = () => {
-  const [reports, setReports] = useState<Report[]>(() => {
-    // Load from localStorage on init
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("cro-reports")
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed)) {
-            return parsed
-              .filter(isValidReport)
-              .map((report) => ({
-                ...report,
-                startTime: new Date(report.startTime),
-                completedTime: report.completedTime ? new Date(report.completedTime) : undefined,
-              }))
-          }
-        } catch {
-          return []
-        }
-      }
+  const [reports, setReports] = useState<Report[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { getAuthHeaders, isAuthenticated } = useAuthContext()
+
+  // Fetch reports from the backend
+  const fetchReports = useCallback(async () => {
+    if (!isAuthenticated) {
+      setReports([])
+      setIsLoading(false)
+      return
     }
-    return []
-  })
 
-  // Save to localStorage whenever reports change
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await fetch(`${API_BASE_URL}/api/cro/analyses`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch reports: ${response.statusText}`)
+      }
+
+      const data: Report[] = await response.json()
+      
+      // Convert string dates to Date objects
+      const reportsWithDates = data.map(report => ({
+        ...report,
+        createdAt: new Date(report.createdAt),
+        updatedAt: new Date(report.updatedAt),
+      }))
+
+      setReports(reportsWithDates)
+    } catch (err) {
+      console.error('Error fetching reports:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch reports')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isAuthenticated, getAuthHeaders])
+
+  // Fetch reports on mount and when authentication changes
   useEffect(() => {
-    localStorage.setItem("cro-reports", JSON.stringify(reports))
-  }, [reports])
+    fetchReports()
+  }, [fetchReports])
 
-  const addReport = useCallback((report: Report) => {
-    setReports(prev => [report, ...prev])
-  }, [])
+  // Create a new analysis
+  const createAnalysis = useCallback(async (url: string): Promise<Report | null> => {
+    if (!isAuthenticated) {
+      throw new Error('User must be authenticated to create analysis')
+    }
 
-  const updateReport = useCallback((id: string, updates: Partial<Report> | ((prev: Report) => Partial<Report>)) => {
-    setReports(prev => prev.map(report => 
-      report.id === id ? { ...report, ...(typeof updates === 'function' ? updates(report) : updates) } : report
-    ))
-  }, [])
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/cro/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({ url }),
+      })
 
-  return { reports, addReport, updateReport }
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create analysis')
+      }
+
+      const data = await response.json()
+      
+      // Fetch updated reports after creating new analysis
+      await fetchReports()
+      
+      return data
+    } catch (err) {
+      console.error('Error creating analysis:', err)
+      throw err
+    }
+  }, [isAuthenticated, getAuthHeaders, fetchReports])
+
+  // Get a single report by ID
+  const getReportById = useCallback(async (id: string): Promise<Report | null> => {
+    if (!isAuthenticated) {
+      throw new Error('User must be authenticated to fetch report')
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/cro/analysis/${id}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null
+        }
+        throw new Error(`Failed to fetch report: ${response.statusText}`)
+      }
+
+      const report: Report = await response.json()
+      
+      return {
+        ...report,
+        createdAt: new Date(report.createdAt),
+        updatedAt: new Date(report.updatedAt),
+      }
+    } catch (err) {
+      console.error('Error fetching report:', err)
+      throw err
+    }
+  }, [isAuthenticated, getAuthHeaders])
+
+  // Download PDF report
+  const downloadPDF = useCallback(async (reportId: string): Promise<void> => {
+    if (!isAuthenticated) {
+      throw new Error('User must be authenticated to download report')
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/cro/analysis/${reportId}/pdf`, {
+        headers: {
+          ...getAuthHeaders(),
+        } as Record<string, string>,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to download PDF: ${response.statusText}`)
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `CRO_Report_${reportId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (err) {
+      console.error('Error downloading PDF:', err)
+      throw err
+    }
+  }, [isAuthenticated, getAuthHeaders])
+
+  return { 
+    reports, 
+    isLoading, 
+    error, 
+    fetchReports, 
+    createAnalysis, 
+    getReportById, 
+    downloadPDF 
+  }
 } 

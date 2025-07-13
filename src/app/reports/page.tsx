@@ -17,7 +17,7 @@ export default function ReportsPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const { reports, addReport, updateReport } = useReports()
+  const { reports, isLoading, error: reportsError, createAnalysis, downloadPDF } = useReports()
 
   const handleGenerateReport = useCallback(async () => {
     const trimmedUrl = url.trim()
@@ -35,46 +35,17 @@ export default function ReportsPage() {
     setError(null)
     setIsSubmitting(true)
 
-    const newReport = {
-      id: Date.now().toString(),
-      url: trimmedUrl,
-      status: "generating" as const,
-      progress: 0,
-      startTime: new Date(),
+    try {
+      await createAnalysis(trimmedUrl)
+      setUrl("")
+      setError(null)
+    } catch (err) {
+      console.error('Failed to create analysis:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create analysis')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    addReport(newReport)
-    setUrl("")
-
-    // Simulate report generation progress
-    const interval = setInterval(() => {
-      updateReport(newReport.id, (prev) => {
-        if (prev.status !== "generating") {
-          clearInterval(interval)
-          return prev
-        }
-
-        const newProgress = Math.min(prev.progress + Math.random() * 15, 100)
-
-        if (newProgress >= 100) {
-          clearInterval(interval)
-          setIsSubmitting(false)
-          return {
-            ...prev,
-            status: "completed",
-            progress: 100,
-            completedTime: new Date(),
-            duration: Math.floor((Date.now() - prev.startTime.getTime()) / 1000),
-          }
-        }
-
-        return { ...prev, progress: newProgress }
-      })
-    }, 800)
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(interval)
-  }, [url, addReport, updateReport])
+  }, [url, createAnalysis])
 
   const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value)
@@ -88,14 +59,12 @@ export default function ReportsPage() {
   }, [handleGenerateReport, isSubmitting])
 
   const handleViewReport = useCallback((reportId: string) => {
-    // TODO: Implement report viewing logic
+    // TODO: Implement report viewing logic - could open in a modal or new page
     console.log("Viewing report:", reportId)
   }, [])
 
-  const handleDownloadPDF = useCallback((reportId: string) => {
-    // TODO: Implement PDF download logic
-    console.log("Downloading PDF for report:", reportId)
-  }, [])
+  // Combine local error with reports error
+  const displayError = error || reportsError
 
   return (
     <ProtectedRoute>
@@ -109,13 +78,13 @@ export default function ReportsPage() {
             <ReportsDashboard
               reports={reports}
               url={url}
-              error={error}
+              error={displayError}
+              isLoading={isLoading}
               isSubmitting={isSubmitting}
               onUrlChange={handleUrlChange}
               onKeyPress={handleKeyPress}
               onSubmit={handleGenerateReport}
               onViewReport={handleViewReport}
-              onDownloadPDF={handleDownloadPDF}
             />
           </div>
         </div>

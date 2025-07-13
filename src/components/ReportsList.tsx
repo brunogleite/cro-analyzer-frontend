@@ -6,10 +6,9 @@ import { ReportCard } from "./ReportCard"
 interface ReportsListProps {
   reports: Report[]
   onViewReport: (reportId: string) => void
-  onDownloadPDF: (reportId: string) => void
 }
 
-export const ReportsList = ({ reports, onViewReport, onDownloadPDF }: ReportsListProps) => {
+export const ReportsList = ({ reports, onViewReport }: ReportsListProps) => {
   if (reports.length === 0) {
     return (
       <Card>
@@ -29,7 +28,6 @@ export const ReportsList = ({ reports, onViewReport, onDownloadPDF }: ReportsLis
           key={report.id}
           report={report}
           onViewReport={onViewReport}
-          onDownloadPDF={onDownloadPDF}
         />
       ))}
     </div>

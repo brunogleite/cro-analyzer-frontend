@@ -17,7 +17,9 @@ export const formatDuration = (seconds: number): string => {
 
 export const getStatusColor = (status: Report["status"]): string => {
   switch (status) {
-    case "generating":
+    case "pending":
+      return "bg-yellow-500"
+    case "processing":
       return "bg-blue-500"
     case "completed":
       return "bg-green-500"
@@ -30,8 +32,10 @@ export const getStatusColor = (status: Report["status"]): string => {
 
 export const getStatusText = (status: Report["status"]): string => {
   switch (status) {
-    case "generating":
-      return "Generating"
+    case "pending":
+      return "Pending"
+    case "processing":
+      return "Processing"
     case "completed":
       return "Completed"
     case "failed":

@@ -6,6 +6,7 @@ interface ReportsDashboardProps {
   reports: Report[]
   url: string
   error: string | null
+  isLoading: boolean
   isSubmitting: boolean
   onUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void
@@ -18,21 +19,26 @@ export const ReportsDashboard = ({
   reports,
   url,
   error,
+  isLoading,
   isSubmitting,
   onUrlChange,
   onKeyPress,
   onSubmit,
   onViewReport,
-  onDownloadPDF
 }: ReportsDashboardProps) => {
   return (
     <>
       <div className="space-y-6">
-        <ReportsList
-          reports={reports}
-          onViewReport={onViewReport}
-          onDownloadPDF={onDownloadPDF}
-        />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-gray-500">Loading reports...</div>
+          </div>
+        ) : (
+          <ReportsList
+            reports={reports}
+            onViewReport={onViewReport}
+          />
+        )}
       </div>
 
       {/* Bottom URL Input */}

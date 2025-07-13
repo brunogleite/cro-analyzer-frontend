@@ -18,8 +18,8 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
   }
 
   const handleOneTimeClick = () => {
-    // Navigate to the main page (one-time analysis)
-    router.push('/')
+    // Navigate to the one-time analysis page
+    router.push('/one-time')
   }
 
   return (
@@ -38,7 +38,7 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
         <div className="space-y-2">
           <button
             onClick={handleOneTimeClick}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+            className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
               activeTab === "one-time"
                 ? "bg-blue-50 text-blue-700 border border-blue-200"
                 : "text-gray-600 hover:bg-gray-50"
@@ -49,7 +49,11 @@ export const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
           </button>
           <button
             onClick={handleReportsClick}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-gray-600 hover:bg-gray-50"
+            className={`w-full cursor-pointer flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeTab === "reports"
+                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                : "text-gray-600 hover:bg-gray-50"
+            }`}
           >
             <FileText className="h-4 w-4" />
             Reports

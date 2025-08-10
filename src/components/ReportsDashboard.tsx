@@ -12,7 +12,6 @@ interface ReportsDashboardProps {
   onKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void
   onSubmit: () => void
   onViewReport: (reportId: string) => void
-  onDownloadPDF: (reportId: string) => void
 }
 
 export const ReportsDashboard = ({

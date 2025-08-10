@@ -27,7 +27,7 @@ export interface RegisterData {
   lastName: string
 }
 
-const API_BASE_URL = 'http://localhost:3000'
+const API_BASE_URL = 'http://localhost:3001'
 
 export const useAuth = () => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -157,11 +157,17 @@ export const useAuth = () => {
     return token ? { Authorization: `Bearer ${token}` } : {}
   }, [])
 
+  const googleAuth = useCallback(() => {
+    // Redirect to backend Google OAuth initiation endpoint
+    window.location.href = 'http://localhost:8080/auth/google'
+  }, [])
+
   return {
     ...authState,
     login,
     register,
     logout,
     getAuthHeaders,
+    googleAuth,
   }
 } 

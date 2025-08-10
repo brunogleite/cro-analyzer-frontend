@@ -12,6 +12,7 @@ interface AuthContextType {
   register: (userData: RegisterData) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   getAuthHeaders: () => Record<string, string | undefined>
+  googleAuth: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)

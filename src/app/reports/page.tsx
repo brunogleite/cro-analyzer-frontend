@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import {
   Sidebar,
   Header,
@@ -12,12 +13,13 @@ import {
 } from "@/components"
 
 export default function ReportsPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabType>("reports")
   const [url, setUrl] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const { reports, isLoading, error: reportsError, createAnalysis, downloadPDF } = useReports()
+  const { reports, isLoading, error: reportsError, createAnalysis } = useReports()
 
   const handleGenerateReport = useCallback(async () => {
     const trimmedUrl = url.trim()
@@ -59,9 +61,8 @@ export default function ReportsPage() {
   }, [handleGenerateReport, isSubmitting])
 
   const handleViewReport = useCallback((reportId: string) => {
-    // TODO: Implement report viewing logic - could open in a modal or new page
-    console.log("Viewing report:", reportId)
-  }, [])
+    router.push(`/reports/${reportId}`)
+  }, [router])
 
   // Combine local error with reports error
   const displayError = error || reportsError
